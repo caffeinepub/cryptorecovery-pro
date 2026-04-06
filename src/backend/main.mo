@@ -136,11 +136,8 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Recovery Request Management
+  // Recovery Request Management — no auth required, publicly accessible
   public shared ({ caller }) func submitRequest(request : RequestSubmission) : async Nat {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can submit requests");
-    };
     let id = nextRequestId;
     nextRequestId += 1;
 

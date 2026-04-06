@@ -1,45 +1,22 @@
 # CryptoRecovery Pro
 
 ## Current State
-Full-stack Bitcoin recovery services website with:
-- Landing page: Hero, Stats, Services, Pricing, How It Works, Testimonials, FAQ, Contact Form
-- Backend: Motoko with RecoveryRequest, ServiceListing, Testimonial management, authorization
-- Admin panel at /admin with username/password login (CryptoRecovery2025 / Admin@2025)
-- Pricing: Basic $450 / Advanced $2500, BTC + USDT wallet copy buttons
-- Dark luxury theme: Playfair Display + Plus Jakarta Sans, gold OKLCH accents
-- No Privacy Policy, Terms & Conditions pages
-- No live chat feature
-- Contact section is a simple form — no payment flow feel
+The site has a contact form (submitRequest) and a live chat widget (sendVisitorMessage). The `sendVisitorMessage` backend function is publicly accessible (no auth required), but `submitRequest` requires `#user` permission via AccessControl -- meaning only logged-in Internet Identity users can submit. Since visitors are anonymous and there is no login flow on the public site, form submissions fail with "Submission failed" and chat messages may fail too if the actor isn't ready.
 
 ## Requested Changes (Diff)
 
 ### Add
-- **Crypto Payment Gateway section**: After plan selection, show a proper payment flow UI — invoice-style with amount, wallet QR-code placeholder, countdown timer, copy address button, and "I've Sent Payment" confirmation button. Should feel like a real crypto checkout, not just wallet addresses on a card.
-- **Live Chat Widget**: Floating chat bubble (bottom-right corner). Opens a chat panel where visitors can type messages. Admin sees all messages in admin panel with ability to reply. Store messages in backend (ChatMessage type). Real-time feel via polling.
-- **Privacy Policy page**: Full-page route /privacy with proper legal content covering data collection, usage, cookies, third parties, contact info.
-- **Terms & Conditions page**: Full-page route /terms with comprehensive terms covering services, payments, refunds, liability, disclaimers.
-- **Footer links**: Make Privacy Policy and Terms & Conditions links in footer navigate to those pages.
+- Nothing new
 
 ### Modify
-- **Contact Section**: Add a payment step after form submission — show crypto payment instructions with timer (15 minutes), wallet address + copy, amount breakdown, confirmation button.
-- **PricingSection**: Keep existing but clicking "Get Started" should scroll to contact form AND pre-select the plan.
-- **Header**: Add Privacy Policy / Terms links visible in footer nav (not header).
-- **Admin Panel**: Add a "Live Chat" tab showing all visitor messages, allow admin to reply to each conversation.
-- **Fonts**: Upgrade to Inter for body text (more modern/professional than Plus Jakarta Sans) while keeping Playfair Display for headings.
-- **Overall design**: Make it feel more premium — tighter spacing, better card shadows, more professional typography hierarchy.
+- `submitRequest` in `main.mo`: Remove the `#user` permission check so anonymous/public users can submit recovery requests (same pattern as `sendVisitorMessage`). Store a placeholder Principal or omit the caller tracking.
+- Remove the `userRequests` map tracking by caller Principal (since anonymous callers all share the same principal), or keep it but skip the permission guard.
 
 ### Remove
-- Nothing removed, only additions and improvements.
+- AccessControl permission check from `submitRequest`
 
 ## Implementation Plan
-1. Update backend Motoko to add ChatMessage type with sendMessage, getMessages, adminReply, getAllChats functions.
-2. Regenerate backend.d.ts bindings.
-3. Update frontend:
-   a. Add pages: PrivacyPolicyPage, TermsPage
-   b. Update App.tsx routing for /privacy, /terms
-   c. Create LiveChatWidget component (floating bubble + chat panel)
-   d. Update ContactSection with payment step (invoice UI after form submit)
-   e. Update Footer to link Privacy/Terms to pages
-   f. Update Admin panel with Chat tab
-   g. Improve font to Inter for body
-   h. Polish overall design quality
+1. In `main.mo`, change `submitRequest` from `shared ({ caller })` to `shared` (or keep caller but remove the permission guard)
+2. Remove `Runtime.trap("Unauthorized: Only users can submit requests")` check
+3. Keep the rest of the logic the same -- just store requests without requiring login
+4. Regenerate backend bindings
